@@ -1,0 +1,10 @@
+[project]
+name = "gold-ratio-filter"
+version = "0.1.0"
+description = "실시간 웹캠 황금 비율 필터"
+requires-python = ">=3.12"
+dependencies = [
+    "mediapipe>=0.10.0",
+    "numpy>=1.24.0",
+    "opencv-python>=4.8.0",
+]

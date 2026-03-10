@@ -1,0 +1,4 @@
+- mediapipe face landmark를 사용해서 황금 비율을 검출하는 기능
+- 황금 비율이 아닐경우 얼굴 영역 모자이크로 처리.
+  - 얼굴 영역은 mediapipe face detection 사용.
+- 항상 데이터 타입을 정의할 것.
