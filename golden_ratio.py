@@ -1,23 +1,28 @@
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from mediapipe.tasks.python.components.containers.landmark import NormalizedLandmark
 import numpy as np
 from config import GOLDEN_RATIO, TOLERANCE, RATIO_CHECKS
 
 
-def euclidean_distance(p1, p2):
-    return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+def euclidean_distance(p1: tuple[int, int], p2: tuple[int, int]) -> float:
+    return float(np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2))
 
 
-def _pt(landmarks, idx, frame_w, frame_h):
+def _pt(landmarks: list[NormalizedLandmark], idx: int, frame_w: int, frame_h: int) -> tuple[int, int]:
     lm = landmarks[idx]
     return int(lm.x * frame_w), int(lm.y * frame_h)
 
 
-def is_golden_ratio(landmarks, frame_w, frame_h):
+def is_golden_ratio(
+    landmarks: list[NormalizedLandmark],
+    frame_w: int,
+    frame_h: int,
+) -> tuple[bool, dict[str, float]]:
     """
     Tasks API NormalizedLandmark 리스트로 황금 비율 여부 판별.
-    Returns: bool
+    Returns: (is_golden, ratios)
     """
     forehead    = _pt(landmarks, 10,  frame_w, frame_h)
     chin        = _pt(landmarks, 152, frame_w, frame_h)
@@ -27,15 +32,15 @@ def is_golden_ratio(landmarks, frame_w, frame_h):
     nose_bridge = _pt(landmarks, 168, frame_w, frame_h)
     upper_lip   = _pt(landmarks, 0,   frame_w, frame_h)
 
-    face_length  = euclidean_distance(forehead, chin)
-    face_width   = euclidean_distance(cheek_left, cheek_right)
-    upper_face   = euclidean_distance(forehead, nose_tip)
-    lower_face   = euclidean_distance(nose_tip, chin)
-    eye_to_nose  = euclidean_distance(nose_bridge, nose_tip)
+    face_length   = euclidean_distance(forehead, chin)
+    face_width    = euclidean_distance(cheek_left, cheek_right)
+    upper_face    = euclidean_distance(forehead, nose_tip)
+    lower_face    = euclidean_distance(nose_tip, chin)
+    eye_to_nose   = euclidean_distance(nose_bridge, nose_tip)
     nose_to_mouth = euclidean_distance(nose_tip, upper_lip)
 
-    ratios = {}
-    checks = []
+    ratios: dict[str, float] = {}
+    checks: list[bool] = []
 
     if RATIO_CHECKS.get("face_length_width") and face_width > 0:
         r = face_length / face_width
@@ -55,7 +60,7 @@ def is_golden_ratio(landmarks, frame_w, frame_h):
     return bool(checks) and all(checks), ratios
 
 
-def create_face_landmarker():
+def create_face_landmarker() -> vision.FaceLandmarker:
     base_options = python.BaseOptions(model_asset_path="models/face_landmarker.task")
     options = vision.FaceLandmarkerOptions(
         base_options=base_options,

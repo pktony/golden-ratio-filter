@@ -1,41 +1,53 @@
 import cv2
+import numpy as np
 import mediapipe as mp
+from mediapipe.tasks.python.components.containers.landmark import NormalizedLandmark
+from mediapipe.tasks.python.vision.face_landmarker import FaceLandmarkerResult
+from mediapipe.tasks.python.vision import FaceLandmarker
 from golden_ratio import create_face_landmarker, is_golden_ratio
 from draw_mesh import draw_mesh, draw_landmark_indices
 from draw_bbox import draw_bbox
 
 
-def main():
-    cap = cv2.VideoCapture(0)
+def main() -> None:
+    cap: cv2.VideoCapture = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("웹캠을 열 수 없습니다.")
         return
 
-    landmarker = create_face_landmarker()
+    landmarker: FaceLandmarker = create_face_landmarker()
     print("황금 비율 필터 실행 중... (q 키로 종료)")
 
     while True:
+        ret: bool
+        frame: np.ndarray
         ret, frame = cap.read()
         if not ret:
             break
+        frame = cv2.flip(frame, 1)
 
+        frame_h: int
+        frame_w: int
         frame_h, frame_w = frame.shape[:2]
         rgb      = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
 
-        result = landmarker.detect(mp_image)
+        result: FaceLandmarkerResult = landmarker.detect(mp_image)
 
-        golden_count = 0
+        golden_count: int = 0
         if result.face_landmarks:
+            face_lms: list[NormalizedLandmark]
             for face_lms in result.face_landmarks:
                 draw_mesh(frame, face_lms)
                 draw_landmark_indices(frame, face_lms, frame_w, frame_h)
+                golden: bool
+                ratios: dict[str, float]
                 golden, ratios = is_golden_ratio(face_lms, frame_w, frame_h)
                 draw_bbox(frame, face_lms, frame_w, frame_h, golden, ratios)
                 if golden:
                     golden_count += 1
 
-        total = len(result.face_landmarks) if result.face_landmarks else 0
+        total: int = len(result.face_landmarks) if result.face_landmarks else 0
         cv2.putText(frame, f"Faces: {total} | Golden: {golden_count}",
                     (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 

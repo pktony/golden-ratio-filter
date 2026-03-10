@@ -1,9 +1,12 @@
 import cv2
+import numpy as np
+from collections.abc import Iterable
 from mediapipe.tasks.python.vision import drawing_utils, drawing_styles
 from mediapipe.tasks.python.vision import FaceLandmarksConnections
+from mediapipe.tasks.python.components.containers.landmark import NormalizedLandmark
 
 
-def draw_mesh(frame, landmarks):
+def draw_mesh(frame: np.ndarray, landmarks: list[NormalizedLandmark]) -> None:
     drawing_utils.draw_landmarks(
         image=frame,
         landmark_list=landmarks,
@@ -21,7 +24,7 @@ def draw_mesh(frame, landmarks):
 
 
 # 황금 비율 계산에 사용하는 주요 랜드마크
-KEY_LANDMARKS = {
+KEY_LANDMARKS: dict[int, str] = {
     10:  "forehead",
     152: "chin",
     4:   "nose_tip",
@@ -32,17 +35,23 @@ KEY_LANDMARKS = {
 }
 
 
-def draw_landmark_indices(frame, landmarks, frame_w, frame_h, indices=None):
+def draw_landmark_indices(
+    frame: np.ndarray,
+    landmarks: list[NormalizedLandmark],
+    frame_w: int,
+    frame_h: int,
+    indices: Iterable[int] | None = None,
+) -> None:
     """
     indices: 표시할 인덱스 목록. None이면 KEY_LANDMARKS 전체 표시.
     전체 468개를 보려면 indices=range(468) 전달.
     """
-    targets = indices if indices is not None else KEY_LANDMARKS.keys()
+    targets: Iterable[int] = indices if indices is not None else KEY_LANDMARKS.keys()
 
     for idx in targets:
         lm = landmarks[idx]
         x, y = int(lm.x * frame_w), int(lm.y * frame_h)
-        label = f"{idx}" if indices is not None else f"{idx}:{KEY_LANDMARKS[idx]}"
+        label: str = f"{idx}" if indices is not None else f"{idx}:{KEY_LANDMARKS[idx]}"
         cv2.circle(frame, (x, y), 3, (0, 255, 255), -1)
         cv2.putText(frame, label, (x + 4, y - 4),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1)

@@ -1,11 +1,16 @@
 import cv2
+import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from config import MOSAIC_BLOCK_SIZE
 
 
-def apply_mosaic(frame, bbox, block_size=MOSAIC_BLOCK_SIZE):
+def apply_mosaic(
+    frame: np.ndarray,
+    bbox: tuple[int, int, int, int],
+    block_size: int = MOSAIC_BLOCK_SIZE,
+) -> np.ndarray:
     """bbox=(x, y, w, h) 영역에 모자이크 적용."""
     x, y, w, h = bbox
     h_f, w_f = frame.shape[:2]
@@ -31,7 +36,7 @@ def apply_mosaic(frame, bbox, block_size=MOSAIC_BLOCK_SIZE):
     return frame
 
 
-def create_face_detector():
+def create_face_detector() -> vision.FaceDetector:
     base_options = python.BaseOptions(model_asset_path="models/blaze_face_short_range.tflite")
     options = vision.FaceDetectorOptions(base_options=base_options)
     return vision.FaceDetector.create_from_options(options)
